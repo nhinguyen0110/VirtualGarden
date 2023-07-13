@@ -1,0 +1,412 @@
+<!DOCTYPE html>
+<html>
+<!--
+------------------------------------------------------------------------------
+   Name:     NhiNguyen_IS221_FinalProgrammingProject.htm
+   Author:   Nhi Nguyen
+   Date:     2023-05-18
+   Language: HTML, CSS, JavaScript
+   Purpose:  Design a web page that allows users to create and customize their 
+	     own virtual garden. The purpose of the program is to provide a fun 
+             and interactive way for users to learn about plants and gardening.
+------------------------------------------------------------------------------
+-->
+<head>
+  <title>VIRTUAL GARDEN</title>
+  <style>
+    body {
+      background-image: url('background.jpg');
+      background-size: cover;
+      background-repeat: no-repeat;
+      font-family: Verdana, sans-serif;
+      margin: 10px;
+      padding: 20px;
+      text-align: center;
+    }
+    
+    .container {
+      max-width: 2000px;
+      margin: 5px auto;
+      padding: 0px;
+      text-align: center;
+    }
+    
+    h1, h3, p {
+      background-image: linear-gradient(to right, #245F10, #113405);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      text-align: center;
+      color: #4CAF50;
+    }
+    
+    #create-button{
+        background-color:#4CAF50; 
+        color:white; 
+        padding:.5em .8em; 
+        border-radius:.3em; 
+        border:none; 
+        cursor:pointer
+    }
+
+    #create-button:hover{
+        background-color:#3e8e41
+    }
+
+    #garden-form {
+      width: 300px;
+      margin-bottom: 10px;
+      padding: 15px 15px;
+      border-radius: 5px;
+      box-shadow: 0 2px 4px rgba(0.2, 0.2, 0.4, 0.4);
+      display:inline-block;
+      background-image: linear-gradient(to right, #38821F, #7BA26E);
+      text-align: center; 
+    }
+    
+    #garden-form label {
+        color:white;
+        display:block; 
+        margin-bottom:.5em
+    }
+    
+    #garden-form input[type="number"] {
+        width:auto; 
+        padding:.5em; 
+        border-radius:.5em; 
+        border:3px; 
+        box-shadow:.1em .1em .2em rgba(0,0,0,.1);
+        margin-bottom:.5em;
+    }
+    
+    #plant-buttons {
+        margin-bottom:.3em; 
+        display:inline-block
+    }
+    
+    #plant-buttons button {
+        background-color:white; 
+        color:black; 
+        padding:.5em .5em; 
+        border-radius:.3em; 
+        border:none; 
+        cursor:pointer
+    }
+    
+    #plant-buttons button:hover{
+        background-color:#ddd
+    }
+    
+    #garden-canvas{
+        background-color: white;
+        display:block; 
+        margin:auto; 
+        border-radius:.3em; 
+        margin-bottom:.5em;
+        border: 2px solid #4CAF50;
+    }
+
+    #save-button{
+        background-color:#4CAF50; 
+        color:white; 
+        padding:.5em .8em; 
+        border-radius:.3em; 
+        border:none; 
+        cursor:pointer
+    }
+
+    #save-button:hover{
+        background-color:#3e8e41
+    }
+
+    #soil-select{
+        padding:.5em; 
+        border-radius:.2em; 
+        border:none; 
+        box-shadow:.1em .1em .2em rgba(0,0,0,.1);
+                margin-bottom:.3em
+    }
+
+    select:focus{
+            outline:none
+    }
+
+    button:focus{
+            outline:none
+    }
+
+    input[type=number]:focus{
+            outline:none
+    }
+
+    input[type=number]::-webkit-inner-spin-button,
+    input[type=number]::-webkit-outer-spin-button{
+            -webkit-appearance:none; 
+            margin:0
+    }
+
+    input[type=number]{
+            -moz-appearance:textfield
+    }
+</style>
+</head>
+
+<body>
+<!-- Title of the page -->
+<h1>VIRTUAL GARDEN</h1>
+<!-- Form for user to input garden dimensions -->
+<form id="garden-form">
+<label for="width">Input Your Garden Width</label><input type="number" id="width" min="1" required>
+<br><br>
+<label for="height">Input Your Garden Height</label><input type="number" id="height" min="1" required>
+<br><br>
+<button id="create-button">Create Garden</button>
+</form>
+
+<!-- Soil options for user to select -->
+<div>
+<h3>Select Your Soil Type</h3>
+<select id="soil-select">
+<option value="Clay">Clay</option>
+<option value="Sandy">Sandy</option>
+<option value="Loam">Loam</option>
+</select>
+</div>
+
+<!-- Plant options for user to select -->
+<div id="plant-options">
+<h3>Select Your Plants</h3>
+<div id="plant-buttons">
+<button id="button1">Rose</button>
+<button id="button2">Tulip</button>
+<button id="button3">Daisy</button>
+</div>
+</div><br>
+
+<!-- Button for user to save their garden -->
+<button id="save-button">Save Your Garden</button>
+<br><br>
+
+<!-- Canvas element for displaying the garden -->
+<canvas id="garden-canvas" width="400" height="400"></canvas>
+
+<script>
+// Selecting the garden form and canvas elements and getting the canvas context
+const gardenForm = document.querySelector('#garden-form');
+const gardenCanvas = document.querySelector('#garden-canvas');
+const ctx = gardenCanvas.getContext('2d');
+
+// Declaring a variable to store the URL of the selected soil image
+let soilImageURL = '';
+
+// Define the gardenPlants array to store the plants added to the garden
+let gardenPlants = [];
+
+let gardenArea = 0;
+let gardenPerimeter = 0;
+
+// Array of plant objects with name and image properties.
+const plants = [
+{ name: 'Rose', image: 'rose.png' },
+{ name: 'Tulip', image: 'tulip.png' },
+{ name: 'Daisy', image: 'daisy.png' }
+];
+
+let plantCount = 0;
+
+const plantButtons = document.querySelectorAll('#plant-buttons button');
+
+plantButtons.forEach(function(button) {
+button.addEventListener('click', function() {
+const plantName = this.textContent;
+const plant = plants.find(p => p.name.trim() === plantName.trim());
+const plantImage = new Image();
+plantImage.src = plant.image;
+plantImage.alt = plant.name;
+
+// Generate random x and y coordinates for the plant
+let x, y;
+do {
+x = Math.random() * (gardenCanvas.width - plantImage.width);
+y = Math.random() * (gardenCanvas.height - plantImage.height);
+} while (Math.abs(x - lastPlantPosition.x) < 50 && Math.abs(y - lastPlantPosition.y) < 50);
+
+// Add an onload event handler to the plantImage object
+plantImage.onload = function() {
+ctx.drawImage(plantImage, x - plantImage.width /2 , y - plantImage.height /2 );
+}
+
+// Added a new object to the gardenPlants array
+gardenPlants.push({
+name: plant.name,
+x: x,
+y: y
+});
+
+// Update the value of lastPlantPosition
+lastPlantPosition.x = x;
+lastPlantPosition.y = y;
+
+// Increment the plant count when a plant button is clicked.
+plantCount++;
+});
+});
+
+// Adding an event listener to the form submit event to calculate and display the garden area and perimeter on the canvas.
+gardenForm.addEventListener('submit', function(event) {
+event.preventDefault();
+
+const gardenWidth = parseInt(document.querySelector('#width').value);
+const gardenHeight = parseInt(document.querySelector('#height').value);
+
+// Updated the values of gardenArea and gardenPerimeter instead of declaring new variables.
+gardenArea = gardenWidth * gardenHeight;
+gardenPerimeter = (gardenWidth + gardenHeight) * 2;
+
+ctx.clearRect(0, 0, gardenCanvas.width, gardenCanvas.height);
+ctx.font = '16px Verdana';
+ctx.fillText(`Garden Area: ${gardenArea} square units`, 20, 30);
+ctx.fillText(`Garden Perimeter: ${gardenPerimeter} perimeter units`, 20 , 60);
+ctx.fillText(`Number of Plants: ${plantCount}`, 20 , 90);
+
+setTimeout(function() {
+ctx.clearRect(0, 0, gardenCanvas.width, gardenCanvas.height);
+plantCount = 0;
+gardenPlants = [];
+
+const soilImage = new Image();
+soilImage.src = soilImageURL;
+
+ctx.globalAlpha = 1.0;
+
+soilImage.onload = function() {
+ctx.drawImage(soilImage, 0, 0, gardenCanvas.width, gardenCanvas.height);
+
+ctx.globalAlpha = 0.75;
+
+gardenPlants.forEach(function(plant) {
+const plantImage = new Image();
+plantImage.src = plants.find(p => p.name === plant.name).image;
+ctx.drawImage(plantImage, plant.x - plantImage.width /2 , plant.y - plantImage.height /2 );
+});
+
+ctxglobalAlpha = 1.0;
+};
+}, 2000);
+});
+
+// Selecting the soil select element and adding an event listener to change event to update the canvas with the selected soil image when a new soil type is clicked
+const soilSelect = document.querySelector('#soil-select');
+
+soilSelect.addEventListener('change', function() {
+const selectedSoil = this.value;
+
+const soilImages = {
+'Clay': 'clay.png',
+'Sandy': 'sandy.jpg',
+'Loam': 'loam.jpeg'
+};
+
+soilImageURL = soilImages[selectedSoil];
+
+const soilImage = new Image();
+soilImage.src = soilImageURL;
+
+ctx.globalAlpha = 1.0;
+
+soilImage.onload = function() {
+ctx.drawImage(soilImage, 0, 0, gardenCanvas.width, gardenCanvas.height);
+
+ctx.globalAlpha = 0.75;
+
+gardenPlants.forEach(function(plant) {
+const plantImage = new Image();
+plantImage.src = plants.find(p => p.name === plant.name).image;
+ctx.drawImage(plantImage, plant.x - plantImage.width /2 , plant.y - plantImage.height /2 );
+});
+
+ctx.globalAlpha = 1.0;
+};
+});
+
+// Trigger the change event on page load.
+document.querySelector('#soil-select').dispatchEvent(new Event('change'));
+
+// Declaring a variable to store the last position where a plant was added on the canvas.
+let lastPlantPosition = { x: 0, y: 0 };
+
+// Selecting the save button and adding an event listener to click event to save the garden data as a JSON file when the save button is clicked by user.
+const saveButton = document.querySelector('#save-button');
+
+saveButton.addEventListener('click', function() {
+    // Get the selected soil type
+    const selectedSoil = document.querySelector('#soil-select').value;
+    
+    // Count the number of each plant in the garden
+    const plantCounts = {};
+    gardenPlants.forEach(function(plant) {
+        if (plantCounts[plant.name]) {
+            plantCounts[plant.name]++;
+        } else {
+            plantCounts[plant.name] = 1;
+        }
+    });
+    
+    // Create an object with the garden data
+    const gardenData = {
+        perimeter: gardenPerimeter,
+        area: gardenArea,
+        soilType: selectedSoil,
+        plants: plantCounts
+    };
+    
+    // Convert the garden data object to a JSON string
+    const gardenJSON = JSON.stringify(gardenData);
+    
+    // Create a Blob object with the garden JSON data
+    const gardenBlob = new Blob([gardenJSON], { type: 'application/json' });
+    
+    // Create a URL for the Blob object
+    const gardenURL = URL.createObjectURL(gardenBlob);
+    
+    // Create an anchor element and set its href attribute to the Blob URL
+    const link = document.createElement('a');
+    link.href = gardenURL;
+    link.download = 'garden.json';
+    
+    // Append the anchor element to the document body and click it to download the file
+    document.body.appendChild(link);
+    link.click();
+    
+    // Remove the anchor element from the document body and revoke the Blob URL
+    document.body.removeChild(link);
+    URL.revokeObjectURL(gardenURL);
+});
+
+// Added an event listener for the click event on the canvas to update the lastPlantPosition and gardenPlants variables when a new plant is added.
+gardenCanvas.addEventListener('click', function(event) {
+const mouseX = event.offsetX;
+const mouseY = event.offsetY;
+
+for (let i = 0; i < plants.length; i++) {
+const plantX = 10;
+const plantY = 10 + (i * 50);
+const plantWidth = 32;
+const plantHeight = 32;
+
+if (mouseX >= plantX && mouseX <= plantX + plantWidth && mouseY >= plantY && mouseY <= plantY + plantHeight) {
+// Added a new object to the gardenPlants array.
+gardenPlants.push({
+name: plants[i].name,
+x: mouseX,
+y: mouseY
+});
+// Updated the value of lastPlantPosition.
+lastPlantPosition.x = mouseX;
+lastPlantPosition.y = mouseY;
+break;
+}
+}
+});
+</script>
+</body>
+</html>
